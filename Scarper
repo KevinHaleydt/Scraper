@@ -1,0 +1,44 @@
+import lxml
+import pandas as pd
+import numpy as np
+import requests
+from bs4 import BeautifulSoup
+
+url = 'https://coinmarketcap.com/'
+page = requests.get(url)
+
+soup = BeautifulSoup(page.text, 'html.parser')
+table = soup.find('table')
+
+dict1 = {'coinPosition': [np.nan], 'coinName': [np.nan], 'coinMarketCap': [np.nan], 'coinVolume': [np.nan], 'coinSupply': [np.nan], 'coinChange': [np.nan], 'coinGraph': [np.nan]}
+coin_data = pd.DataFrame(dict1)
+
+for row in table.find_all('tr')[1:]:
+    col = row.find_all('td')
+
+    coinPosition = col[0].text.strip()
+    coinName = col[1].text.strip()
+    coinMarketCap = col[2].text.strip()
+    coinVolume = col[3].text.strip()
+    coinSupply = col[4].text.strip()
+    coinChange = col[5].text.strip()
+    coinGraph = col[6].text.strip()
+
+    temp_df = {'coinPosition': coinPosition, 'coinName': coinName, 'coinMarketCap': coinMarketCap, 'coinVolume': coinVolume, 'coinSupply': coinSupply, 'coinChange': coinChange, 'coinGraph': coinGraph}
+
+    coin_data = coin_data.append(temp_df, ignore_index=True)
+
+coin_data = coin_data.drop(0)
+
+#print(coin_data.coinName)
+
+new = coin_data["coinName"].str.split("\n\n", n = 1, expand = True)
+coin_data["coinSymbol"] = new[0]
+coin_data["coinName"] = new[1]
+
+print(coin_data)
+coin_data.to_csv('prices.csv', index = False)
+
+
+
+
